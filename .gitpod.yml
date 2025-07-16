@@ -1,0 +1,72 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Setup For BwoB Intro To Bioinformatics (Conda, QIIME 2, q2-krona, and Krona)
+    init: |
+      CONDA_DIR="/workspace/miniconda3"
+      if [ ! -d "$CONDA_DIR" ]; then
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        bash Miniconda3-latest-Linux-x86_64.sh -b -p $CONDA_DIR
+        rm Miniconda3-latest-Linux-x86_64.sh
+      fi
+      echo 'export PATH="$CONDA_DIR/bin:$PATH"' >> $HOME/.bashrc
+      echo '. $CONDA_DIR/etc/profile.d/conda.sh' >> $HOME/.bashrc
+      source $HOME/.bashrc
+      conda init bash
+      if [ ! -d "$CONDA_DIR/envs/qiime2-amplicon-2025.4" ]; then
+        conda update -n base -c defaults conda
+        max_retries=3
+        retry_count=0
+        while [ $retry_count -lt $max_retries ]; do
+          if conda env create -n qiime2-amplicon-2025.4 --file https://raw.githubusercontent.com/qiime2/distributions/refs/heads/dev/2025.4/amplicon/released/qiime2-amplicon-ubuntu-latest-conda.yml; then
+            echo "QIIME 2 environment created successfully"
+            break
+          else
+            echo "Failed to create QIIME 2 environment. Retrying in 10 seconds..."
+            sleep 10
+            ((retry_count++))
+          fi
+        done
+        if [ $retry_count -eq $max_retries ]; then
+          echo "Failed to create QIIME 2 environment after $max_retries attempts"
+          exit 1
+        fi
+      fi
+      source $HOME/.bashrc
+      conda activate qiime2-amplicon-2025.4
+      # Install Krona with error handling
+      max_retries=2
+      retry_count=0
+      while [ $retry_count -lt $max_retries ]; do
+        if conda install -c bioconda krona -y; then
+          echo "Krona installed successfully"
+          break
+        else
+          echo "Failed to install Krona. Retrying..."
+          sleep 5
+          ((retry_count++))
+        fi
+      done
+      # Update Krona taxonomy
+      ktUpdateTaxonomy.sh || echo "Warning: Krona taxonomy update may have had issues"
+      # Install q2-krona plugin
+      pip install git+https://github.com/kaanb93/q2-krona.git
+      qiime dev refresh-cache
+    command: |
+      source $HOME/.bashrc
+      conda activate qiime2-amplicon-2025.4
+      echo 'conda activate qiime2-amplicon-2025.4' >> $HOME/.bashrc
+      echo "Conda, QIIME 2, q2-krona, and Krona setup complete. Verifying installation..."
+      conda info
+      qiime --version
+      echo "Verifying Krona installation:"
+      which ktImportText
+      echo "Verifying q2-krona plugin installation:"
+      qiime krona --help
+      echo "Setup complete. You can now use QIIME 2 commands including the q2-krona plugin."
+
+vscode:
+  extensions:
+    - ms-python.python
+    - ms-python.debugpy
