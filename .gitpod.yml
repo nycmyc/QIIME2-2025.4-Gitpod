@@ -11,6 +11,7 @@ tasks:
         rm Miniconda3-latest-Linux-x86_64.sh
       fi
       echo 'export PATH="$CONDA_DIR/bin:$PATH"' >> $HOME/.bashrc
+      echo 'export CONDA_DIR="/workspace/miniconda3"' >> $HOME/.bashrc
       echo '. $CONDA_DIR/etc/profile.d/conda.sh' >> $HOME/.bashrc
       source $HOME/.bashrc
       conda init bash
@@ -35,6 +36,10 @@ tasks:
       fi
       source $HOME/.bashrc
       conda activate qiime2-amplicon-2025.4
+      # Install bash-completion if not already installed
+      if ! dpkg -l | grep -q bash-completion; then
+        sudo apt-get update && sudo apt-get install -y bash-completion
+      fi
       # Install Krona with error handling
       max_retries=2
       retry_count=0
@@ -52,11 +57,39 @@ tasks:
       ktUpdateTaxonomy.sh || echo "Warning: Krona taxonomy update may have had issues"
       # Install q2-krona plugin
       pip install git+https://github.com/kaanb93/q2-krona.git
+      # Refresh QIIME 2 cache and enable tab completion
       qiime dev refresh-cache
+      # Set up QIIME 2 tab completion
+      echo "" >> $HOME/.bashrc
+      echo "# Enable bash completion" >> $HOME/.bashrc
+      echo "if [ -f /etc/bash_completion ]; then" >> $HOME/.bashrc
+      echo "    . /etc/bash_completion" >> $HOME/.bashrc
+      echo "fi" >> $HOME/.bashrc
+      echo "" >> $HOME/.bashrc
+      echo "# QIIME 2 tab completion" >> $HOME/.bashrc
+      echo "if [ -f $CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime ]; then" >> $HOME/.bashrc
+      echo "    source $CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime" >> $HOME/.bashrc
+      echo "fi" >> $HOME/.bashrc
+      # Auto-activate conda environment
+      echo "" >> $HOME/.bashrc
+      echo "# Auto-activate QIIME 2 environment" >> $HOME/.bashrc
+      echo "conda activate qiime2-amplicon-2025.4" >> $HOME/.bashrc
     command: |
+      # Export CONDA_DIR for use in commands
+      export CONDA_DIR="/workspace/miniconda3"
+      # Source bashrc to get all configurations
       source $HOME/.bashrc
+      # Explicitly activate the environment
       conda activate qiime2-amplicon-2025.4
-      echo 'conda activate qiime2-amplicon-2025.4' >> $HOME/.bashrc
+      # Generate tab completion if it doesn't exist
+      if [ ! -f "$CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime" ]; then
+        echo "Generating QIIME 2 tab completion..."
+        qiime dev refresh-cache
+      fi
+      # Source tab completion for current session
+      if [ -f "$CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime" ]; then
+        source "$CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime"
+      fi
       echo "Conda, QIIME 2, q2-krona, and Krona setup complete. Verifying installation..."
       conda info
       qiime --version
@@ -64,7 +97,10 @@ tasks:
       which ktImportText
       echo "Verifying q2-krona plugin installation:"
       qiime krona --help
-      echo "Setup complete. You can now use QIIME 2 commands including the q2-krona plugin."
+      echo ""
+      echo "Setup complete! Tab completion is enabled."
+      echo "You can now use QIIME 2 commands with tab completion."
+      echo "Try typing 'qiime ' and pressing TAB to see available commands."
 
 vscode:
   extensions:
