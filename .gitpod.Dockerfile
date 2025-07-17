@@ -8,6 +8,7 @@ RUN sudo apt-get update && sudo apt-get install -y \
     bzip2 \
     ca-certificates \
     curl \
+    bash-completion \
     && sudo apt-get clean \
     && sudo rm -rf /var/lib/apt/lists/*
 
