@@ -6,6 +6,7 @@ This repository provides a ready-to-use Gitpod workspace configuration for QIIME
 
 ## Features
 - **QIIME 2 2025.4 Amplicon Distribution** - Latest version with all amplicon analysis tools
+- **Tab Completion** - Full bash tab completion for all QIIME 2 commands
 - **q2-krona Plugin** - Interactive taxonomic visualization with Krona
 - **Pre-configured Environment** - Ready to use immediately upon workspace launch
 - **Gitpod Classic Compatible** - Optimized for Gitpod Classic workspaces
@@ -22,6 +23,7 @@ This repository provides a ready-to-use Gitpod workspace configuration for QIIME
 ## What's Included
 - Miniconda3 (latest version)
 - QIIME 2 2025.4 Amplicon Distribution
+- Full bash tab completion for QIIME 2 commands
 - Krona visualization tools
 - q2-krona plugin
 - Python 3.10 environment
@@ -32,6 +34,9 @@ Once the setup is complete, you can verify the installation:
 ```bash
 # Check QIIME 2 version
 qiime --version
+
+# Test tab completion (type 'qiime ' and press TAB)
+qiime [TAB]
 
 # List installed QIIME 2 plugins
 qiime --help
@@ -61,6 +66,13 @@ If you encounter any issues:
 2. Manually activate if needed: `conda activate qiime2-amplicon-2025.4`
 3. For Krona taxonomy issues, run: `ktUpdateTaxonomy.sh`
 4. Clear conda cache if needed: `conda clean --all`
+
+### Tab Completion Issues
+If tab completion is not working:
+1. Ensure the environment is activated: `conda activate qiime2-amplicon-2025.4`
+2. Manually source the tab completion: `source $CONDA_DIR/envs/qiime2-amplicon-2025.4/bin/tab-qiime`
+3. Refresh your bash session: `source ~/.bashrc`
+4. Regenerate QIIME 2 cache: `qiime dev refresh-cache`
 
 ## Resources
 - [QIIME 2 Documentation](https://docs.qiime2.org/)
